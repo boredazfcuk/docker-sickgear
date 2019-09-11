@@ -28,4 +28,5 @@ HEALTHCHECK --start-period=10s --interval=1m --timeout=10s \
   CMD wget --quiet --tries=1 --spider http://${HOSTNAME}:8081/sickgear/home || exit 1
 
 VOLUME "${CONFIGDIR}"
+
 CMD /usr/local/bin/start-sickgear.sh
