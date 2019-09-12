@@ -42,7 +42,7 @@ SetOwnerAndGroup(){
 
 LaunchSickGear(){
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Starting SickGear as ${USER}"
-   su -m "${USER}" -c 'python '"${APPBASE}/SickGear.py"' --config '"${CONFIGDIR}/config.ini"' --datadir '"${CONFIGDIR}"''
+   su -m "${USER}" -c 'python '"${APPBASE}/sickgear.py"' --config '"${CONFIGDIR}/config.ini"' --datadir '"${CONFIGDIR}"''
 }
 
 ##### Script #####
