@@ -4,7 +4,7 @@ ENV APPBASE="/SickGear" \
    CONFIGDIR="/config" \
    REPO="SickGear/SickGear" \
    BUILDDEPENDENCIES="py-pip gcc python-dev libxml2-dev libxslt-dev musl-dev" \
-   APPDEPENDENCIES="git python libxml2 libxslt tzdata"
+   APPDEPENDENCIES="git python libxml2 libxslt tzdata unrar unzip p7zip"
 
 COPY start-sickgear.sh /usr/local/bin/start-sickgear.sh
 
