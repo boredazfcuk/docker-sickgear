@@ -7,6 +7,7 @@ ENV APPBASE="/SickGear" \
    APPDEPENDENCIES="git python libxml2 libxslt tzdata unrar unzip p7zip openssl"
 
 COPY start-sickgear.sh /usr/local/bin/start-sickgear.sh
+COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 
 RUN echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD STARTED *****" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Create application directory" && \
@@ -26,7 +27,7 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD COMPLETE *****"
 
 HEALTHCHECK --start-period=10s --interval=1m --timeout=10s \
-  CMD wget --quiet --tries=1 --spider http://${HOSTNAME}:8081/sickgear/home || exit 1
+  CMD /usr/local/bin/healthcheck.sh
 
 VOLUME "${CONFIGDIR}"
 

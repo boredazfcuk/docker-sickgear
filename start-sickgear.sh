@@ -13,15 +13,32 @@ Initialise(){
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    SickGear application directory: ${APPBASE}"
    sed -i "s%web_host =.*$%web_host = ${LANIP}%" "${CONFIGDIR}/config.ini"
 
-   if [ ! -f "${CONFIGDIR}/ssl" ]; then mkdir -p "${CONFIGDIR}/ssl"; fi
-   if [ ! -f "${CONFIGDIR}/ssl/sickgear.crt" ]; then
+   if [ ! -f "${CONFIGDIR}/https" ]; then mkdir -p "${CONFIGDIR}/https"; fi
+
+   if [ ! -f "${CONFIGDIR}/https/sickgear.key" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Generate private key for encrypting communications"
-      openssl ecparam -genkey -name secp384r1 -out "${CONFIGDIR}/ssl/sickgear.key"
-      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Create certificate request"
-      openssl req -new -subj "/C=NA/ST=Global/L=Global/O=SickGear/OU=SickGear/CN=SickGear/" -key "${CONFIGDIR}/ssl/sickgear.key" -out "${CONFIGDIR}/ssl/sickgear.csr"
-      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Generate self-signed certificate request"
-      openssl x509 -req -sha256 -days 3650 -in "${CONFIGDIR}/ssl/sickgear.csr" -signkey "${CONFIGDIR}/ssl/sickgear.key" -out "${CONFIGDIR}/ssl/sickgear.crt"
+      openssl ecparam -genkey -name secp384r1 -out "${CONFIGDIR}/https/sickgear.key"
    fi
+   if [ ! -f "${CONFIGDIR}/https/sickgear.csr" ]; then
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Create certificate request"
+      openssl req -new -subj "/C=NA/ST=Global/L=Global/O=SickGear/OU=SickGear/CN=SickGear/" -key "${CONFIGDIR}/https/sickgear.key" -out "${CONFIGDIR}/https/sickgear.csr"
+   fi
+   if [ ! -f "${CONFIGDIR}/https/sickgear.crt" ]; then
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Generate self-signed certificate request"
+      openssl x509 -req -sha256 -days 3650 -in "${CONFIGDIR}/https/sickgear.csr" -signkey "${CONFIGDIR}/https/sickgear.key" -out "${CONFIGDIR}/https/sickgear.crt"
+   fi
+
+   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configure SickGear to use ${CONFIGDIR}/https/sickgear.key key file"
+   SICKGEARKEY="$(sed -nr '/\[General\]/,/\[/{/^https_key =/p}' "${CONFIGDIR}/config.ini")"
+   sed -i "s%^${SICKGEARKEY}$%https_key = ${CONFIGDIR}/https/sickgear.key%" "${CONFIGDIR}/config.ini"
+
+   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configure SickGear to use ${CONFIGDIR}/https/sickgear.crt certificate file"
+   SICKGEARCERT="$(sed -nr '/\[General\]/,/\[/{/^https_cert =/p}' "${CONFIGDIR}/config.ini")"
+   sed -i "s%^${SICKGEARCERT}$%https_cert = ${CONFIGDIR}/https/sickgear.crt%" "${CONFIGDIR}/config.ini"
+
+   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configure SickGear to use HTTPS"
+   SICKGEARHTTPS="$(sed -nr '/\[General\]/,/\[/{/^enable_https =/p}' "${CONFIGDIR}/config.ini")"
+   sed -i "s%^${SICKGEARHTTPS}$%enable_https = 1%" "${CONFIGDIR}/config.ini"
 
 }
 
