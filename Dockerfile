@@ -22,7 +22,7 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
    echo -e "\nlxml\nregex\nscandir" >> "${APPBASE}/requirements.txt" && \
    pip install --no-cache-dir -r "${APPBASE}/requirements.txt" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
-   chmod +x /usr/local/bin/start-sickgear.sh && \
+   chmod +x /usr/local/bin/start-sickgear.sh /usr/local/bin/healthcheck.sh && \
    apk del --purge build-deps && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD COMPLETE *****"
 
