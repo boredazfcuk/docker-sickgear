@@ -12,6 +12,17 @@ Initialise(){
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Local group: ${GROUP}:${GID}"
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    SickGear application directory: ${APPBASE}"
    sed -i "s%web_host =.*$%web_host = ${LANIP}%" "${CONFIGDIR}/config.ini"
+
+   if [ ! -f "${CONFIGDIR}/ssl" ]; then mkdir -p "${CONFIGDIR}/ssl"; fi
+   if [ ! -f "${CONFIGDIR}/ssl/sickgear.crt" ]; then
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Generate private key for encrypting communications"
+      openssl ecparam -genkey -name secp384r1 -out "${CONFIGDIR}/ssl/sickgear.key"
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Create certificate request"
+      openssl req -new -subj "/C=NA/ST=Global/L=Global/O=SickGear/OU=SickGear/CN=SickGear/" -key "${CONFIGDIR}/ssl/sickgear.key" -out "${CONFIGDIR}/ssl/sickgear.csr"
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Generate self-signed certificate request"
+      openssl x509 -req -sha256 -days 3650 -in "${CONFIGDIR}/ssl/sickgear.csr" -signkey "${CONFIGDIR}/ssl/sickgear.key" -out "${CONFIGDIR}/ssl/sickgear.crt"
+   fi
+
 }
 
 CreateGroup(){
