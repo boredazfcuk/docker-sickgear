@@ -110,7 +110,7 @@ Configure(){
          -e "/^\[General\]/,/^\[.*\]/ s%api_keys =.*%api_keys = sabnzbd:::${GLOBALAPIKEY}%" \
          "${CONFIGDIR}/sickgear.ini"
    fi
-   if [ ! -z "${SICKGEAR}" ]; then
+   if [ ! -z "${SICKGEARENABLED}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Set web root for reverse proxying"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable handling of reverse proxy headers"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable handling of security headers"
@@ -149,7 +149,7 @@ Configure(){
             "${CONFIGDIR}/sickgear.ini"
       fi
    fi
-   if [ ! -z "${SABNZBD}" ]; then
+   if [ ! -z "${SABNZBDENABLED}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable SABnzbd"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Setting SABnzbd host to https://sabnzbd:9090/"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Setting SABnzbd category to: tv"
@@ -197,7 +197,7 @@ Configure(){
             "${CONFIGDIR}/sickgear.ini"
       fi
    fi
-   if [ ! -z "${DELUGE}" ]; then
+   if [ ! -z "${DELUGEENABLED}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Config Deluge MORE ECHO EXPLANATIONS NEEDED***************************************"
       sed -i \
          -e "/^\[General\]/,/^\[.*\]/ s%use_torrents =.*%use_torrents = 1%" \
