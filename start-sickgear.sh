@@ -1,5 +1,5 @@
 #!/bin/ash
-
+#
 ##### Functions #####
 Initialise(){
    LANIP="$(hostname -i)"
