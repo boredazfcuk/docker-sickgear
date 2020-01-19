@@ -97,12 +97,12 @@ Configure(){
       -e "/^\[General\]/,/^\[.*\]/ s%allowed_hosts = \".*\"%allowed_hosts = \"${HOSTNAME}\"%" \
       -e "/^\[General\]/,/^\[.*\]/ s%allow_anyip =.*%allow_anyip = 0%" \
       "${config_dir}/sickgear.ini"
-   if [ ! -z "${media_access_domain}" ]; then
+   if [ "${media_access_domain}" ]; then
       sed -i \
          -e "/^\[General\]/,/^\[.*\]/ s%allowed_hosts = \".*\"%allowed_hosts = \"${HOSTNAME}, ${media_access_domain}\"%" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ ! -z "${global_api_key}" ]; then
+   if [ "${global_api_key}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable API key usage"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Set API key sabnzbd:::${global_api_key}"
       sed -i \
@@ -110,7 +110,7 @@ Configure(){
          -e "/^\[General\]/,/^\[.*\]/ s%api_keys =.*%api_keys = sabnzbd:::${global_api_key}%" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ ! -z "${sickgear_enabled}" ]; then
+   if [ "${sickgear_enabled}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Set web root for reverse proxying"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable handling of reverse proxy headers"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable handling of security headers"
@@ -120,7 +120,7 @@ Configure(){
          -e "/^\[General\]/,/^\[.*\]/ s%send_security_headers =.*%send_security_headers = 1%" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ ! -z "${kodi_headless_group_id}" ]; then
+   if [ "${kodi_headless_group_id}" ]; then
       if [ "$(grep -c use_kodi "${config_dir}/sickgear.ini")" = 0 ]; then
          echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configuring kodi-headless"
          sed -i \
@@ -149,7 +149,7 @@ Configure(){
             "${config_dir}/sickgear.ini"
       fi
    fi
-   if [ ! -z "${sabnzbd_enabled}" ]; then
+   if [ "${sabnzbd_enabled}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable SABnzbd"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Setting SABnzbd host to https://sabnzbd:9090/"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Setting SABnzbd category to: tv"
@@ -197,7 +197,7 @@ Configure(){
             "${config_dir}/sickgear.ini"
       fi
    fi
-   if [ ! -z "${deluge_enabled}" ]; then
+   if [ "${deluge_enabled}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Config Deluge MORE ECHO EXPLANATIONS NEEDED***************************************"
       sed -i \
          -e "/^\[General\]/,/^\[.*\]/ s%use_torrents =.*%use_torrents = 1%" \
@@ -221,7 +221,7 @@ Configure(){
             "${config_dir}/sickgear.ini"
       fi
    fi
-   if [ ! -z "${prowl_api_key}" ]; then
+   if [ "${prowl_api_key}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configuring Prowl notifications"
       sed -i \
          -e "/^\[Prowl\]/,/^\[.*\]/ s%^use_prowl =.*%use_prowl = 1%" \
@@ -234,7 +234,7 @@ Configure(){
          -e "/^\[Prowl\]/,/^\[.*\]/ s%^use_prowl =.*%use_prowl = 0%" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ ! -z "${OMGWTFNZBS}" ]; then
+   if [ "${OMGWTFNZBS}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configuring OMGWTFNZBs search provider"
       sed -i \
          -e "/^\[OMGWTFNZBS\]/,/^\[.*\]/ s%^omgwtfnzbs_username =.*%omgwtfnzbs_username = ${omgwtfnzbs_user}%" \
