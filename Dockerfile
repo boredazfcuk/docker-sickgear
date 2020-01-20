@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.10
 MAINTAINER boredazfcuk
 ARG app_repo="SickGear/SickGear"
 ARG build_dependencies="py-pip gcc python-dev libxml2-dev libxslt-dev musl-dev"
