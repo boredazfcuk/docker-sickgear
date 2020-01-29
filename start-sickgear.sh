@@ -96,13 +96,13 @@ Configure(){
       -e "/^\[General\]/,/^\[.*\]/ s%notify_on_update =.*%notify_on_update = 0%" \
       -e "/^\[General\]/,/^\[.*\]/ s%web_username = \".*\"%web_username = \"${stack_user}\"%" \
       -e "/^\[General\]/,/^\[.*\]/ s%web_password = \".*\"%web_password = \"${stack_password}\"%" \
-      -e "/^\[General\]/,/^\[.*\]/ s%allowed_hosts = \".*\"%allowed_hosts = \"${HOSTNAME}\"%" \
+      -e "/^\[General\]/,/^\[.*\]/ s%allowed_hosts = \".*\"%allowed_hosts = \"$(hostname),sickgear)\"%" \
       -e "/^\[General\]/,/^\[.*\]/ s%allow_anyip =.*%allow_anyip = 0%" \
       -e "/^\[General\]/,/^\[.*\]/ s%provider_order = \"\"%provider_order = drunkenslug ninjacentral nzbgeek omgwtfnzbs sick_beard_index alpharatio bb bithdtv blutopia btn digitalhive ettv eztv fano filelist funfile grabtheinfo hdbits hdme hdspace hdtorrents immortalseed iptorrents limetorrents magnetdl milkie morethan ncore nebulance pisexy pretome privatehd ptfiles rarbg revtt scenehd scenetime shazbat showrss skytorrents snowfl speedcd the_pirate_bay torlock torrentday torrenting torrentleech tvchaosuk xspeeds zooqle horriblesubs nyaa tokyotoshokan%" \
       "${config_dir}/sickgear.ini"
    if [ "${media_access_domain}" ]; then
       sed -i \
-         -e "/^\[General\]/,/^\[.*\]/ s%allowed_hosts = \".*\"%allowed_hosts = \"${HOSTNAME}, ${media_access_domain}\"%" \
+         -e "/^\[General\]/,/^\[.*\]/ s%allowed_hosts = \".*\"%allowed_hosts = \"$(hostname),sickgear,${media_access_domain}\"%" \
          "${config_dir}/sickgear.ini"
    fi
    if [ "${global_api_key}" ]; then
