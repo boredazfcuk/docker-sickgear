@@ -21,11 +21,11 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
    apk del --purge build-deps
 
-COPY start-sickgear.sh /usr/local/bin/start-sickgear.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY healthcheck.sh /usr/local/bin/healthcheck.sh
 
 RUN echo "$(date '+%d/%m/%Y - %H:%M:%S') | Set permissions on scripts" && \
-   chmod +x /usr/local/bin/start-sickgear.sh /usr/local/bin/healthcheck.sh && \
+   chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD COMPLETE *****"
 
 HEALTHCHECK --start-period=10s --interval=1m --timeout=10s \
@@ -34,4 +34,4 @@ HEALTHCHECK --start-period=10s --interval=1m --timeout=10s \
 VOLUME "${config_dir}"
 WORKDIR "${app_base_dir}"
 
-CMD /usr/local/bin/start-sickgear.sh
+ENTRYPOINT /usr/local/bin/entrypoint.sh

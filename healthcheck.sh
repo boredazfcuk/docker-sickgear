@@ -1,9 +1,9 @@
 #!/bin/ash
-exit_code=0
-exit_code="$(wget --quiet --tries=1 --spider --no-check-certificate "https://${HOSTNAME}:8081/sickgear/images/ico/favicon.ico" | echo ${?})"
-if [ "${exit_code}" != 0 ]; then
-   echo "WebUI not responding: Error ${exit_code}"
+
+if [ "$(nc -z "$(hostname -i)" 8081; echo "${?}")" -ne 0 ]; then
+   echo "SickGear WebUI not responding on port 8081"
    exit 1
 fi
-echo "WebUIs available"
+
+echo "SickGear WebUI responding OK"
 exit 0

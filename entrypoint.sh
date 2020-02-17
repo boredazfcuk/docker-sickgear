@@ -4,7 +4,7 @@
 Initialise(){
    lan_ip="$(hostname -i)"
    echo -e "\n"
-   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    ***** Starting SickGear/SickGear container *****"
+   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    ***** Configuring SickGear container launch environment *****"
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Local user: ${stack_user:=stackman}:${user_id:=1000}"
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Local group: ${sickgear_group:=sickgear}:${sickgear_group_id:=1000}"
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Password: ${stack_password:=Skibidibbydibyodadubdub}"
@@ -39,10 +39,10 @@ FirstRun(){
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    First run detected. Initialisation required"
    find "${config_dir}" ! -user "${stack_user}" -exec chown "${stack_user}" {} \;
    find "${config_dir}" ! -group "${sickgear_group}" -exec chgrp "${sickgear_group}" {} \;
-   su -m "${stack_user}" -c "/usr/bin/python ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir} --quiet --nolaunch --daemon --pidfile=/tmp/sickgear.pid"
+   su -p "${stack_user}" -c "/usr/bin/python ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir} --quiet --nolaunch --daemon --pidfile=/tmp/sickgear.pid"
    sleep 15
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Default configuration created - restarting"
-   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    ***** Reload SickGear/SickGear *****"
+   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    ***** Reload SickGear launch environment *****"
    pkill python
    sleep 5
    echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configure update interval to 48hr"
@@ -123,7 +123,7 @@ Configure(){
          -e "/^\[General\]/,/^\[.*\]/ s%send_security_headers =.*%send_security_headers = 1%" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "${kodi_headless_group_id}" ]; then
+   if [ "${kodi_enabled}" ]; then
       if [ "$(grep -c use_kodi "${config_dir}/sickgear.ini")" = 0 ]; then
          echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configuring kodi-headless"
          sed -i \
@@ -306,8 +306,13 @@ SetOwnerAndGroup(){
 }
 
 LaunchSickGear(){
-   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Starting SickGear as ${stack_user}"
-   su -m "${stack_user}" -c "/usr/bin/python ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir}"
+   echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    ***** Configuration of SickGear container launch environment complete *****"
+   if [ -z "${1}" ]; then
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Starting SickGear as ${stack_user}"
+      exec "$(which su)" -p "${stack_user}" -c "$(which python) ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir}"
+   else
+      exec "$@"
+   fi
 }
 
 ##### Script #####

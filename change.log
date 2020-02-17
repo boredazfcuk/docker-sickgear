@@ -1,0 +1,3 @@
+20200212
+
+ - Change: Healthcheck now checks that the WebGUI is responding on ports 8081
