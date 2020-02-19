@@ -1,3 +1,7 @@
+20200218
+
+ - Change: Broke up Configure() function into smaller functions for each stack component
+
 20200212
 
  - Change: Healthcheck now checks that the WebGUI is responding on ports 8081

@@ -123,6 +123,9 @@ Configure(){
          -e "/^\[General\]/,/^\[.*\]/ s%send_security_headers =.*%send_security_headers = 1%" \
          "${config_dir}/sickgear.ini"
    fi
+}
+
+Kodi(){
    if [ "${kodi_enabled}" ]; then
       if [ "$(grep -c use_kodi "${config_dir}/sickgear.ini")" = 0 ]; then
          echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configuring kodi-headless"
@@ -152,6 +155,9 @@ Configure(){
             "${config_dir}/sickgear.ini"
       fi
    fi
+}
+
+SABnzbd(){
    if [ "${sabnzbd_enabled}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable SABnzbd"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Setting SABnzbd host to https://sabnzbd:9090/"
@@ -200,6 +206,9 @@ Configure(){
             "${config_dir}/sickgear.ini"
       fi
    fi
+}
+
+Deluge(){
    if [ "${deluge_enabled}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable Deluge for Torrents"
       sed -i \
@@ -225,6 +234,9 @@ Configure(){
             "${config_dir}/sickgear.ini"
       fi
    fi
+}
+
+Prow(){
    if [ "${prowl_api_key}" ]; then
       if [ "$(grep -c "\[Prowl\]" "${config_dir}/sickgear.ini")" = 0 ]; then
          echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Add Prowl notification configuration"
@@ -245,6 +257,9 @@ Configure(){
          -e "/^\[Prowl\]/,/^\[.*\]/ s%^use_prowl =.*%use_prowl = 0%" \
          "${config_dir}/sickgear.ini"
    fi
+}
+
+OMGWTFNZBs(){
    if [ "${omgwtfnzbs_api_key}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Configuring OMGWTFNZBs search provider"
       sed -i \
@@ -259,6 +274,9 @@ Configure(){
          -e "/^\[OMGWTFNZBS\]/,/^\[.*\]/ s%^omgwtfnzbs_api_key =.*%omgwtfnzbs_api_key = \"\"%" \
          "${config_dir}/sickgear.ini"
    fi
+}
+
+Indexers(){
    if [ "$(grep -c "\[MAGNETDL\]" "${config_dir}/sickgear.ini")" = 0 ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable MagnetDL provider"
       echo "[MAGNETDL]" >> "${config_dir}/sickgear.ini"
@@ -322,5 +340,12 @@ CreateUser
 if [ ! -f "${config_dir}/sickgear.ini" ]; then FirstRun; fi
 EnableSSL
 Configure
+Kodi
+SABnzbd
+Deluge
+Prowl
+Telegram
+OMBWTFNZBs
+Indexers
 SetOwnerAndGroup
 LaunchSickGear
