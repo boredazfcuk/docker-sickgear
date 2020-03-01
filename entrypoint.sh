@@ -116,11 +116,11 @@ Configure(){
    if [ "${sickgear_enabled}" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Set web root for reverse proxying to /sickgear"
       echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable handling of reverse proxy headers"
-      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Enable handling of security headers"
+      echo "$(date '+%Y-%m-%d %H:%M:%S') INFO:    Disable handling of security headers; leave it to the NGINX reverse proxy"
       sed -i \
          -e "/^\[General\]/,/^\[.*\]/ s%web_root =.*%web_root = /sickgear%" \
          -e "/^\[General\]/,/^\[.*\]/ s%handle_reverse_proxy =.*%handle_reverse_proxy = 1%" \
-         -e "/^\[General\]/,/^\[.*\]/ s%send_security_headers =.*%send_security_headers = 1%" \
+         -e "/^\[General\]/,/^\[.*\]/ s%send_security_headers =.*%send_security_headers = 0%" \
          "${config_dir}/sickgear.ini"
    fi
 }

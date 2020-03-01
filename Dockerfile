@@ -17,7 +17,7 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install ${app_repo}" && \
    git clone -b develop "https://github.com/${app_repo}.git" "${app_base_dir}" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
    echo -e "\nlxml\nregex\nscandir" >> "${app_base_dir}/requirements.txt" && \
-   pip install --no-cache-dir -r "${app_base_dir}/requirements.txt" && \
+   pip install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
    apk del --purge build-deps
 
