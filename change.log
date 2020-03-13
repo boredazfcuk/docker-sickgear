@@ -1,3 +1,7 @@
+20200313
+
+ - Change: Log now displays OS version
+
 20200218
 
  - Change: Broke up Configure() function into smaller functions for each stack component
