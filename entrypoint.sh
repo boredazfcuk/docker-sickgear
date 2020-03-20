@@ -3,7 +3,7 @@
 ##### Functions #####
 Initialise(){
    lan_ip="$(hostname -i)"
-   echo -e "\n"
+   echo
    echo "$(date '+%c') INFO:    ***** Configuring SickGear container launch environment *****"
    echo "$(date '+%c') INFO:    $(cat /etc/*-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/"//g')"
    echo "$(date '+%c') INFO:    Local user: ${stack_user:=stackman}:${user_id:=1000}"
