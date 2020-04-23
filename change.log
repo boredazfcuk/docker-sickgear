@@ -1,3 +1,7 @@
+20200421
+
+ - Change: Migrate to Python3. nzbToMedia issue prompting it, in case it's due to Python2.7 no longer being supported
+
 20200414
 
  - Change: Health check use of netcat scrapped. Causing log spam on certain containers. Now using netstat to check if listening port open

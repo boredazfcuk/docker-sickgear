@@ -14,6 +14,18 @@ Initialise(){
    echo "$(date '+%c') INFO:    Listening IP Address: ${lan_ip}"
    echo "$(date '+%c') INFO:    TV Show location(s): ${tv_dirs:=/storage/tvshows/}"
    echo "$(date '+%c') INFO:    Download directory: ${tv_complete_dir:=/storage/downloads/complete/tv/}"
+   if [ "${sickgear_notifications}" ]; then
+      if [ "${sickgear_notifications}" = "Prowl" ] && [ "${prowl_api_key}" ]; then
+         echo "$(date '+%c') INFO:    Configure ${sickgear_notifications} notifications"
+      elif  [ "${sickgear_notifications}" = "Pushbullet" ] && [ "${pushbullet_api_key}" ]; then
+         echo "$(date '+%c') INFO:    Configure ${sickgear_notifications} notifications"
+      elif [ "${sickgear_notifications}" = "Telegram" ] && [ "${telegram_token}" ] && [ "${telegram_chat_id}" ]; then
+         echo "$(date '+%c') INFO:    Configure ${sickgear_notifications} notifications"
+      else
+         echo "$(date '+%c') WARINING ${sickgear_notifications} notifications enabled, but configured incorrectly - disabling notifications"
+         unset sickgear_notifications prowl_api_key pushbullet_api_key telegram_token telegram_chat_id
+      fi
+   fi
 }
 
 CreateGroup(){
@@ -40,11 +52,11 @@ FirstRun(){
    echo "$(date '+%c') INFO:    First run detected. Initialisation required"
    find "${config_dir}" ! -user "${stack_user}" -exec chown "${stack_user}" {} \;
    find "${config_dir}" ! -group "${sickgear_group}" -exec chgrp "${sickgear_group}" {} \;
-   su -p "${stack_user}" -c "/usr/bin/python ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir} --quiet --nolaunch --daemon --pidfile=/tmp/sickgear.pid"
+   su -p "${stack_user}" -c "$(which python3) ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir} --quiet --nolaunch --daemon --pidfile=/tmp/sickgear.pid"
    sleep 15
    echo "$(date '+%c') INFO:    Default configuration created - restarting"
    echo "$(date '+%c') INFO:    ***** Reload SickGear launch environment *****"
-   pkill python
+   pkill python3
    sleep 5
    echo "$(date '+%c') INFO:    Configure update interval to 48hr"
    echo "$(date '+%c') INFO:    Enable notifications for available updates"
@@ -128,7 +140,7 @@ Configure(){
 
 Kodi(){
    if [ "${kodi_enabled}" ]; then
-      if [ "$(grep -c use_kodi "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c use_kodi "${config_dir}/sickgear.ini")" -eq 0 ]; then
          echo "$(date '+%c') INFO:    Configuring kodi-headless"
          sed -i \
             -e "s%metadata_kodi =.*%metadata_kodi = 1|1|0|0|0|0|0|0|0|0%" \
@@ -169,7 +181,7 @@ SABnzbd(){
          -e "/^\[General\]/,/^\[.*\]/ s%process_automatically =.*%process_automatically = 0%" \
          -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_category =.*%sab_category = tv%" \
          "${config_dir}/sickgear.ini"
-      if [ "$(grep -c sab_username "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c sab_username "${config_dir}/sickgear.ini")" -eq 0 ]; then
          sed -i \
             -e "/^\[SABnzbd\]/a sab_username = ${stack_user}" \
             "${config_dir}/sickgear.ini"
@@ -178,7 +190,7 @@ SABnzbd(){
             -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_username =.*%sab_username = ${stack_user}%" \
             "${config_dir}/sickgear.ini"
       fi
-      if [ "$(grep -c "sab_password" "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c "sab_password" "${config_dir}/sickgear.ini")" -eq 0 ]; then
          sed -i \
             -e "/^\[SABnzbd\]/a sab_password = ${stack_password}" \
             "${config_dir}/sickgear.ini"
@@ -187,7 +199,7 @@ SABnzbd(){
             -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_password =.*%sab_password = ${stack_password}%" \
             "${config_dir}/sickgear.ini"
       fi
-      if [ "$(grep -c sab_host "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c sab_host "${config_dir}/sickgear.ini")" -eq 0 ]; then
          sed -i \
             -e "/^\[SABnzbd\]/a sab_host = https://sabnzbd:9090/" \
             "${config_dir}/sickgear.ini"
@@ -197,7 +209,7 @@ SABnzbd(){
             "${config_dir}/sickgear.ini"
       fi
       echo "$(date '+%c') INFO:    Setting SABnzbd API Key"
-      if [ "$(grep -c sab_apikey "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c sab_apikey "${config_dir}/sickgear.ini")" -eq 0 ]; then
          sed -i \
             -e "/^\[SABnzbd\]/a sab_apikey = ${global_api_key}" \
             "${config_dir}/sickgear.ini"
@@ -216,7 +228,7 @@ Deluge(){
          -e "/^\[General\]/,/^\[.*\]/ s%use_torrents =.*%use_torrents = 1%" \
          -e "/^\[General\]/,/^\[.*\]/ s%torrent_method =.*%torrent_method = deluge%" \
          "${config_dir}/sickgear.ini"
-      if [ "$(grep -c "\[TORRENT\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c "\[TORRENT\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
          echo "$(date '+%c') INFO:    Add Deluge host configuration"
          echo "[TORRENT]" >> "${config_dir}/sickgear.ini"
          sed -i \
@@ -237,9 +249,9 @@ Deluge(){
    fi
 }
 
-Prow(){
+Prowl(){
    if [ "${prowl_api_key}" ]; then
-      if [ "$(grep -c "\[Prowl\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+      if [ "$(grep -c "\[Prowl\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
          echo "$(date '+%c') INFO:    Add Prowl notification configuration"
          echo "[Prowl]" >> "${config_dir}/sickgear.ini"
          sed -i \
@@ -260,6 +272,49 @@ Prow(){
    fi
 }
 
+Telegram(){
+   if [ "${telegram_token}" ]; then
+      if [ "$(grep -c "\[Telegram\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
+         echo "$(date '+%c') INFO:    Add default Telegram notification configuration"
+         echo "[Telegram]" >> "${config_dir}/sickgear.ini"
+         sed -i \
+            -e "/^\[Telegram\]/a telegram_chatid = ${telegram_chat_id}" \
+            -e "/^\[Telegram\]/a telegram_access_token = ${telegram_token}" \
+            -e "/^\[Telegram\]/a telegram_notify_ondownload = 1" \
+            -e "/^\[Telegram\]/a telegram_send_icon = 0" \
+            -e "/^\[Telegram\]/a use_telegram = 1" \
+            "${config_dir}/sickgear.ini"
+      fi
+      echo "$(date '+%c') INFO:    Set Telegram Chat ID and Access Token"
+      sed -i \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^use_telegram =.*%use_telegram = 1%" \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_chatid =.*%telegram_chatid = ${telegram_chat_id}%" \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_send_icon =.*%telegram_send_icon = 0%" \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_access_token =.*%telegram_access_token = ${telegram_token}%" \
+         "${config_dir}/sickgear.ini"
+      if [ "$(grep -c "telegram_chatid" "${config_dir}/sickgear.ini")" -eq 0 ]; then
+         echo "$(date '+%c') INFO:    Add missing Chat ID"
+         sed -i \
+            -e "/^\[Telegram\]/a telegram_chatid = ${telegram_chat_id}" \
+            "${config_dir}/sickgear.ini"
+      fi
+      if [ "$(grep -c "telegram_send_ico" "${config_dir}/sickgear.ini")" -eq 0 ]; then
+         echo "$(date '+%c') INFO:    Add missing setting to disable send icon"
+         sed -i \
+            -e "/^\[Telegram\]/a telegram_send_ico = 0" \
+            "${config_dir}/sickgear.ini"
+      fi
+   else
+      echo "$(date '+%c') INFO:    Disable Telegram notifications"
+      sed -i \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^use_telegram =.*%use_telegram = 0%" \
+         "${config_dir}/sickgear.ini"
+   fi
+      sed -i \
+         -e "/telegram_send_icon/d" \
+         "${config_dir}/sickgear.ini"
+}
+
 OMGWTFNZBs(){
    if [ "${omgwtfnzbs_api_key}" ]; then
       echo "$(date '+%c') INFO:    Configuring OMGWTFNZBs search provider"
@@ -278,35 +333,36 @@ OMGWTFNZBs(){
 }
 
 Indexers(){
-   if [ "$(grep -c "\[MAGNETDL\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+   echo "$(date '+%c') INFO:    Configure indexers"
+   if [ "$(grep -c "\[MAGNETDL\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
       echo "$(date '+%c') INFO:    Enable MagnetDL provider"
       echo "[MAGNETDL]" >> "${config_dir}/sickgear.ini"
       sed -i \
          -e "/^\[MAGNETDL\]/a magnetdl = 1" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "$(grep -c "\[ETTV\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+   if [ "$(grep -c "\[ETTV\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
       echo "$(date '+%c') INFO:    Enable ETTV provider"
       echo "[ETTV]" >> "${config_dir}/sickgear.ini"
       sed -i \
          -e "/^\[ETTV\]/a ettv = 1" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "$(grep -c "\[EZTV\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+   if [ "$(grep -c "\[EZTV\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
       echo "$(date '+%c') INFO:    Enable EZTV provider"
       echo "[EZTV]" >> "${config_dir}/sickgear.ini"
       sed -i \
          -e "/^\[EZTV\]/a eztv = 1" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "$(grep -c "\[SKYTORRENTS\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+   if [ "$(grep -c "\[SKYTORRENTS\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
       echo "$(date '+%c') INFO:    Enable Sky Torrents provider"
       echo "[SKYTORRENTS]" >> "${config_dir}/sickgear.ini"
       sed -i \
          -e "/^\[SKYTORRENTS\]/a skytorrents = 1" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "$(grep -c "\[SICK_BEARD_INDEX\]" "${config_dir}/sickgear.ini")" = 0 ]; then
+   if [ "$(grep -c "\[SICK_BEARD_INDEX\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
       echo "$(date '+%c') INFO:    Enable SickBeard index provider"
       echo "[SICK_BEARD_INDEX]" >> "${config_dir}/sickgear.ini"
       sed -i \
@@ -328,7 +384,7 @@ LaunchSickGear(){
    echo "$(date '+%c') INFO:    ***** Configuration of SickGear container launch environment complete *****"
    if [ -z "${1}" ]; then
       echo "$(date '+%c') INFO:    Starting SickGear as ${stack_user}"
-      exec "$(which su)" -p "${stack_user}" -c "$(which python) ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir}"
+      exec "$(which su)" -p "${stack_user}" -c "$(which python3) ${app_base_dir}/sickgear.py --config ${config_dir}/sickgear.ini --datadir ${config_dir}"
    else
       exec "$@"
    fi
@@ -346,7 +402,7 @@ SABnzbd
 Deluge
 Prowl
 Telegram
-OMBWTFNZBs
+OMGWTFNZBs
 Indexers
 SetOwnerAndGroup
 LaunchSickGear

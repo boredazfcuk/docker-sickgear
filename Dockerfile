@@ -1,8 +1,9 @@
 FROM alpine:latest
 MAINTAINER boredazfcuk
+ARG sickgear_version="0.21.27"
 ARG app_repo="SickGear/SickGear"
-ARG build_dependencies="py-pip gcc python-dev libxml2-dev libxslt-dev musl-dev"
-ARG app_dependencies="git python libxml2 libxslt tzdata unrar unzip p7zip openssl wget"
+ARG build_dependencies="py3-pip gcc python3-dev libxml2-dev libxslt-dev musl-dev"
+ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar unzip p7zip openssl wget"
 ENV app_base_dir="/SickGear" \
    config_dir="/config"
 
@@ -13,11 +14,11 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install build dependencies" && \
    apk add --no-cache --no-progress --virtual=build-deps ${build_dependencies} && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install dependencies" && \
    apk add --no-cache --no-progress ${app_dependencies} && \
-echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install ${app_repo}" && \
+echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install ${app_repo} version ${sickgear_version}" && \
    git clone -b develop "https://github.com/${app_repo}.git" "${app_base_dir}" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
    echo -e "\nlxml\nregex\nscandir" >> "${app_base_dir}/requirements.txt" && \
-   pip install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
+   pip3 install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
    apk del --purge build-deps
 
