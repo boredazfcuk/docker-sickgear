@@ -74,27 +74,6 @@ FirstRun(){
    sleep 1
 }
 
-EnableSSL(){
-   if [ ! -d "${config_dir}/https" ]; then
-      echo "$(date '+%c') INFO:    Initialise HTTPS"
-      mkdir -p "${config_dir}/https"
-      echo "$(date '+%c') INFO:    Generate server key"
-      openssl ecparam -genkey -name secp384r1 -out "${config_dir}/https/sickgear.key"
-      echo "$(date '+%c') INFO:    Generate certificate request"
-      openssl req -new -subj "/C=NA/ST=Global/L=Global/O=SickGear/OU=SickGear/CN=SickGear/" -key "${config_dir}/https/sickgear.key" -out "${config_dir}/https/sickgear.csr"
-      echo "$(date '+%c') INFO:    Generate certificate"
-      openssl x509 -req -sha256 -days 3650 -in "${config_dir}/https/sickgear.csr" -signkey "${config_dir}/https/sickgear.key" -out "${config_dir}/https/sickgear.crt" >/dev/null 2>&1
-   fi
-   echo "$(date '+%c') INFO:    Configure SickGear to use HTTPS"
-   if [ -f "${config_dir}/https/sickgear.key" ] && [ -f "${config_dir}/https/sickgear.crt" ]; then
-      sed -i \
-         -e "/^\[General\]/,/^\[.*\]/ s%https_key =.*%https_key = ${config_dir}/https/sickgear.key%" \
-         -e "/^\[General\]/,/^\[.*\]/ s%https_cert =.*%https_cert = ${config_dir}/https/sickgear.crt%" \
-         -e "/^\[General\]/,/^\[.*\]/ s%enable_https =.*%enable_https = 1%" \
-         "${config_dir}/sickgear.ini"
-   fi
-}
-
 Configure(){
    echo "$(date '+%c') INFO:    Disable browser launch on startup"
    echo "$(date '+%c') INFO:    Configure host IP: ${lan_ip}"
@@ -173,7 +152,7 @@ Kodi(){
 SABnzbd(){
    if [ "${sabnzbd_enabled}" ]; then
       echo "$(date '+%c') INFO:    Enable SABnzbd"
-      echo "$(date '+%c') INFO:    Setting SABnzbd host to https://sabnzbd:9090/"
+      echo "$(date '+%c') INFO:    Setting SABnzbd host to http://sabnzbd:9090/"
       echo "$(date '+%c') INFO:    Setting SABnzbd category to: tv"
       sed -i \
          -e "/^\[General\]/,/^\[.*\]/ s%use_nzbs = 0%use_nzbs = 1%" \
@@ -201,11 +180,11 @@ SABnzbd(){
       fi
       if [ "$(grep -c sab_host "${config_dir}/sickgear.ini")" -eq 0 ]; then
          sed -i \
-            -e "/^\[SABnzbd\]/a sab_host = https://sabnzbd:9090/" \
+            -e "/^\[SABnzbd\]/a sab_host = http://sabnzbd:9090/" \
             "${config_dir}/sickgear.ini"
       else
          sed -i \
-            -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_host =.*%sab_host = https://sabnzbd:9090/%" \
+            -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_host =.*%sab_host = http://sabnzbd:9090/%" \
             "${config_dir}/sickgear.ini"
       fi
       echo "$(date '+%c') INFO:    Setting SABnzbd API Key"
@@ -233,7 +212,7 @@ Deluge(){
          echo "[TORRENT]" >> "${config_dir}/sickgear.ini"
          sed -i \
             -e "/^\[TORRENT\]/a torrent_password = ${stack_password}" \
-            -e "/^\[TORRENT\]/a torrent_host = https://deluge:8112/" \
+            -e "/^\[TORRENT\]/a torrent_host = http://deluge:8112/" \
             -e "/^\[TORRENT\]/a torrent_path = ${tv_complete_dir}" \
             -e "/^\[TORRENT\]/a torrent_label = tv" \
             "${config_dir}/sickgear.ini"
@@ -241,7 +220,7 @@ Deluge(){
          echo "$(date '+%c') INFO:    Configure Deluge host"
          sed -i \
             -e "/^\[TORRENT\]/,/^\[.*\]/ s%torrent_password =.*%torrent_password = ${stack_password}%" \
-            -e "/^\[TORRENT\]/,/^\[.*\]/ s%torrent_host =.*%torrent_host = https://deluge:8112/%" \
+            -e "/^\[TORRENT\]/,/^\[.*\]/ s%torrent_host =.*%torrent_host = http://deluge:8112/%" \
             -e "/^\[TORRENT\]/,/^\[.*\]/ s%torrent_path =.*%torrent_path = ${tv_complete_dir}%" \
             -e "/^\[TORRENT\]/,/^\[.*\]/ s%torrent_label =.*%torrent_label = tv%" \
             "${config_dir}/sickgear.ini"
@@ -276,43 +255,36 @@ Telegram(){
    if [ "${telegram_token}" ]; then
       if [ "$(grep -c "\[Telegram\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
          echo "$(date '+%c') INFO:    Add default Telegram notification configuration"
-         echo "[Telegram]" >> "${config_dir}/sickgear.ini"
-         sed -i \
-            -e "/^\[Telegram\]/a telegram_chatid = ${telegram_chat_id}" \
-            -e "/^\[Telegram\]/a telegram_access_token = ${telegram_token}" \
-            -e "/^\[Telegram\]/a telegram_notify_ondownload = 1" \
-            -e "/^\[Telegram\]/a telegram_send_icon = 0" \
-            -e "/^\[Telegram\]/a use_telegram = 1" \
-            "${config_dir}/sickgear.ini"
+         {
+            echo "[Telegram]"
+            echo "use_telegram = 1"
+            echo "telegram_notify_ondownload = 1"
+            echo "telegram_access_token = ${telegram_token}"
+            echo "telegram_chatid = ${telegram_chat_id}"
+         }  >> "${config_dir}/sickgear.ini"
       fi
-      echo "$(date '+%c') INFO:    Set Telegram Chat ID and Access Token"
-      sed -i \
-         -e "/^\[Telegram\]/,/^\[.*\]/ s%^use_telegram =.*%use_telegram = 1%" \
-         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_chatid =.*%telegram_chatid = ${telegram_chat_id}%" \
-         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_send_icon =.*%telegram_send_icon = 0%" \
-         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_access_token =.*%telegram_access_token = ${telegram_token}%" \
-         "${config_dir}/sickgear.ini"
       if [ "$(grep -c "telegram_chatid" "${config_dir}/sickgear.ini")" -eq 0 ]; then
          echo "$(date '+%c') INFO:    Add missing Chat ID"
          sed -i \
             -e "/^\[Telegram\]/a telegram_chatid = ${telegram_chat_id}" \
             "${config_dir}/sickgear.ini"
       fi
-      if [ "$(grep -c "telegram_send_ico" "${config_dir}/sickgear.ini")" -eq 0 ]; then
-         echo "$(date '+%c') INFO:    Add missing setting to disable send icon"
-         sed -i \
-            -e "/^\[Telegram\]/a telegram_send_ico = 0" \
-            "${config_dir}/sickgear.ini"
-      fi
+      echo "$(date '+%c') INFO:    Set Telegram Chat ID and Access Token"
+      sed -i \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^use_telegram =.*%use_telegram = 1%" \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_chatid =.*%telegram_chatid = ${telegram_chat_id}%" \
+         -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_access_token =.*%telegram_access_token = ${telegram_token}%" \
+         "${config_dir}/sickgear.ini"
+      echo "$(date '+%c') INFO:    Disable send icon"
+      sed -i \
+         -e "/telegram_send_ico/d" \
+         "${config_dir}/sickgear.ini"
    else
       echo "$(date '+%c') INFO:    Disable Telegram notifications"
       sed -i \
          -e "/^\[Telegram\]/,/^\[.*\]/ s%^use_telegram =.*%use_telegram = 0%" \
          "${config_dir}/sickgear.ini"
    fi
-      sed -i \
-         -e "/telegram_send_icon/d" \
-         "${config_dir}/sickgear.ini"
 }
 
 OMGWTFNZBs(){
@@ -395,7 +367,6 @@ Initialise
 CreateGroup
 CreateUser
 if [ ! -f "${config_dir}/sickgear.ini" ]; then FirstRun; fi
-EnableSSL
 Configure
 Kodi
 SABnzbd

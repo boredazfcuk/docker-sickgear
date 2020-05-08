@@ -1,3 +1,7 @@
+20200508
+
+ - Removal: HTTPS now removed. HTTPS encryption now handled by the NGINX reverse proxy which is part of the stack (boredazfcuk/steve). Container should not be accessible from outside the Docker network, so encrypting traffic to/from NGINX is just unneccesary overhead
+
 20200421
 
  - Change: Migrate to Python3. nzbToMedia issue prompting it, in case it's due to Python2.7 no longer being supported
