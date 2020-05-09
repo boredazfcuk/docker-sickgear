@@ -155,7 +155,7 @@ SABnzbd(){
       echo "$(date '+%c') INFO:    Setting SABnzbd host to http://sabnzbd:9090/"
       echo "$(date '+%c') INFO:    Setting SABnzbd category to: tv"
       sed -i \
-         -e "/^\[General\]/,/^\[.*\]/ s%use_nzbs = 0%use_nzbs = 1%" \
+         -e "/^\[General\]/,/^\[.*\]/ s%use_nzbs =.*%use_nzbs = 1%" \
          -e "/^\[General\]/,/^\[.*\]/ s%nzb_method =.*%nzb_method = sabnzbd%" \
          -e "/^\[General\]/,/^\[.*\]/ s%process_automatically =.*%process_automatically = 0%" \
          -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_category =.*%sab_category = tv%" \
@@ -197,6 +197,11 @@ SABnzbd(){
             -e "/^\[SABnzbd\]/,/^\[.*\]/ s%sab_apikey =.*%sab_apikey = ${global_api_key}%" \
             "${config_dir}/sickgear.ini"
       fi
+   else
+      echo "$(date '+%c') INFO:    SABnzbd not enabled"
+      sed -i \
+         -e "/^\[General\]/,/^\[.*\]/ s%use_nzbs =.*%use_nzbs = 0%" \
+         "${config_dir}/sickgear.ini"
    fi
 }
 
@@ -225,6 +230,41 @@ Deluge(){
             -e "/^\[TORRENT\]/,/^\[.*\]/ s%torrent_label =.*%torrent_label = tv%" \
             "${config_dir}/sickgear.ini"
       fi
+   else
+      echo "$(date '+%c') INFO:    Deluge not enabled"
+      sed -i \
+         -e "/^\[General\]/,/^\[.*\]/ s%use_torrents =.*%use_torrents = 0%" \
+         "${config_dir}/sickgear.ini"
+   fi
+}
+
+Jellyfin(){
+   if [ "${jellyfin_enabled}" ]; then
+      echo "$(date '+%c') INFO:    Enable Jellyfin"
+      if [ "$(grep -c "\[Emby\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
+         echo "$(date '+%c') INFO:    Add Emby (Jellyfin compatible) configuration section"
+         {
+            echo "[Emby]"
+            echo "use_emby = 1"
+            echo "emby_apikey = ${global_api_key}"
+            echo "emby_host = jellyfin:8096/jellyfin"
+            echo "emby_update_library = 1"
+            echo "emby_watchedstate_frequency = 10"
+         } >> "${config_dir}/sickgear.ini"
+      else
+         echo "$(date '+%c') INFO:    Configure Emby (Jellyfin compatible) host"
+         sed -i \
+            -e "/^\[Emby\]/,/^\[.*\]/ s%use_emby =.*%use_emby = 1%" \
+            -e "/^\[Emby\]/,/^\[.*\]/ s%emby_apikey =.*%emby_apikey = ${global_api_key}%" \
+            -e "/^\[Emby\]/,/^\[.*\]/ s%emby_host = .*%emby_host = jellyfin:8096/jellyfin%" \
+            -e "/^\[Emby\]/,/^\[.*\]/ s%emby_update_library =.*%emby_update_library = 1%" \
+            "${config_dir}/sickgear.ini"
+      fi
+   else
+      echo "$(date '+%c') INFO:    Jellyfin not enabled"
+      sed -i \
+         -e "/^\[Emby\]/,/^\[.*\]/ s%use_emby =.*%use_emby = 0%" \
+         "${config_dir}/sickgear.ini"
    fi
 }
 
@@ -371,6 +411,7 @@ Configure
 Kodi
 SABnzbd
 Deluge
+Jellyfin
 Prowl
 Telegram
 OMGWTFNZBs
