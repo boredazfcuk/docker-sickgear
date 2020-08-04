@@ -1,10 +1,10 @@
-FROM alpine:latest
+FROM alpine:3.12
 MAINTAINER boredazfcuk
 # sickgear_version not used, just increment to force a rebuild
-ARG sickgear_version="Develop 0.21.36 @ Commit a15197e"
+ARG sickgear_version="Develop 0.21.40 @ Commit c79b7ff"
 ARG app_repo="SickGear/SickGear"
 ARG build_dependencies="py3-pip gcc python3-dev libxml2-dev libxslt-dev musl-dev"
-ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar unzip p7zip openssl wget"
+ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar unzip p7zip openssl"
 ENV app_base_dir="/SickGear" \
    config_dir="/config"
 
@@ -18,8 +18,8 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install dependencies" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install ${app_repo} version ${sickgear_version}" && \
    git clone -b develop "https://github.com/${app_repo}.git" "${app_base_dir}" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
-   echo -e "\nlxml\nregex\nscandir" >> "${app_base_dir}/requirements.txt" && \
    pip3 install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
+   pip3 install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/recommended.txt" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
    apk del --purge build-deps
 
