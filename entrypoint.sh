@@ -28,23 +28,60 @@ Initialise(){
    fi
 }
 
+CheckOpenVPNPIA(){
+   if [ "${openvpnpia_enabled}" ]; then
+      echo "$(date '+%c') INFO:    OpenVPNPIA is enabled. Wait for VPN to connect"
+      vpn_adapter="$(ip addr | grep tun.$ | awk '{print $7}')"
+      while [ -z "${vpn_adapter}" ]; do
+         vpn_adapter="$(ip addr | grep tun.$ | awk '{print $7}')"
+         sleep 5
+      done
+      echo "$(date '+%c') INFO:    VPN adapter available: ${vpn_adapter}"
+   else
+      echo "$(date '+%c') INFO:    OpenVPNPIA is not enabled"
+   fi
+}
+
 CreateGroup(){
-   if [ -z "$(getent group "${sickgear_group}" | cut -d: -f3)" ]; then
-      echo "$(date '+%c') INFO:    Group ID available, creating group"
-      addgroup -g "${sickgear_group_id}" "${sickgear_group}"
-   elif [ ! "$(getent group "${sickgear_group}" | cut -d: -f3)" = "${sickgear_group_id}" ]; then
-      echo "$(date '+%c') ERROR:   Group SickGear group id mismatch - exiting"
-      exit 1
+   if [ "$(grep -c "^${sickgear_group}:x:${sickgear_group_id}:" "/etc/group")" -eq 1 ]; then
+      echo "$(date '+%c') INFO:    Group, ${sickgear_group}:${sickgear_group_id}, already created"
+   else
+      if [ "$(grep -c "^${sickgear_group}:" "/etc/group")" -eq 1 ]; then
+         echo "$(date '+%c') ERROR:   Group name, ${sickgear_group}, already in use - exiting"
+         sleep 120
+         exit 1
+      elif [ "$(grep -c ":x:${sickgear_group_id}:" "/etc/group")" -eq 1 ]; then
+         if [ "${force_gid}" = "True" ]; then
+            group="$(grep ":x:${sickgear_group_id}:" /etc/group | awk -F: '{print $1}')"
+            echo "$(date '+%c') WARNING: Group id, ${sickgear_group_id}, already exists - continuing as force_gid variable has been set. Group name to use: ${sickgear_group}"
+         else
+            echo "$(date '+%c') ERROR:   Group id, ${sickgear_group_id}, already in use - exiting"
+            sleep 120
+            exit 1
+         fi
+      else
+         echo "$(date '+%c') INFO:    Creating group ${sickgear_group}:${sickgear_group_id}"
+         addgroup -g "${sickgear_group_id}" "${sickgear_group}"
+      fi
    fi
 }
 
 CreateUser(){
-   if [ -z "$(getent passwd "${stack_user}" | cut -d: -f3)" ]; then
-      echo "$(date '+%c') INFO:    User ID available, creating user"
-      adduser -s /bin/ash -H -D -G "${sickgear_group}" -u "${user_id}" "${stack_user}"
-   elif [ ! "$(getent passwd "${stack_user}" | cut -d: -f3)" = "${user_id}" ]; then
-      echo "$(date '+%c') ERROR:   User ID already in use - exiting"
-      exit 1
+   if [ "$(grep -c "^${stack_user}:x:${user_id}:${sickgear_group_id}" "/etc/passwd")" -eq 1 ]; then
+      echo "$(date '+%c') INFO     User, ${stack_user}:${user_id}, already created"
+   else
+      if [ "$(grep -c "^${stack_user}:" "/etc/passwd")" -eq 1 ]; then
+         echo "$(date '+%c') ERROR    User name, ${stack_user}, already in use - exiting"
+         sleep 120
+         exit 1
+      elif [ "$(grep -c ":x:${user_id}:$" "/etc/passwd")" -eq 1 ]; then
+         echo "$(date '+%c') ERROR    User id, ${user_id}, already in use - exiting"
+         sleep 120
+         exit 1
+      else
+         echo "$(date '+%c') INFO     Creating user ${stack_user}:${user_id}"
+         adduser -s /bin/ash -D -G "${sickgear_group}" -u "${user_id}" "${stack_user}" -h "/home/${stack_user}"
+      fi
    fi
 }
 
@@ -404,6 +441,7 @@ LaunchSickGear(){
 
 ##### Script #####
 Initialise
+CheckOpenVPNPIA
 CreateGroup
 CreateUser
 if [ ! -f "${config_dir}/sickgear.ini" ]; then FirstRun; fi
