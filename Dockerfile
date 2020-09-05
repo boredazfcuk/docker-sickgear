@@ -18,8 +18,9 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install dependencies" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install ${app_repo} version ${sickgear_version}" && \
    git clone -b develop "https://github.com/${app_repo}.git" "${app_base_dir}" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
-   pip3 install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
-   pip3 install --upgrade pip --no-cache-dir --requirement "${app_base_dir}/recommended.txt" && \
+   pip3 install --upgrade pip --no-cache-dir wheel && \
+   pip3 install --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
+   pip3 install --no-cache-dir --requirement "${app_base_dir}/recommended.txt" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
    apk del --purge build-deps
 
