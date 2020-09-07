@@ -8,7 +8,7 @@ ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar u
 ENV app_base_dir="/SickGear" \
    config_dir="/config"
 
-RUN echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD STARTED *****" && \
+RUN echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD STARTED FOR SICKGEAR *****" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Create application directory" && \
    mkdir -p "${app_base_dir}" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install build dependencies" && \
