@@ -3,15 +3,21 @@
 ##### Functions #####
 Initialise(){
    lan_ip="$(hostname -i)"
+   default_gateway="$(ip route | grep "^default" | awk '{print $3}')"
    echo
    echo "$(date '+%c') INFO:    ***** Configuring SickGear container launch environment *****"
    echo "$(date '+%c') INFO:    $(cat /etc/*-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/"//g')"
-   echo "$(date '+%c') INFO:    Local user: ${stack_user:=stackman}:${user_id:=1000}"
+   echo "$(date '+%c') INFO:    Local user: ${stack_user:=stackman}:${stack_uid:=1000}"
    echo "$(date '+%c') INFO:    Local group: ${sickgear_group:=sickgear}:${sickgear_group_id:=1000}"
    echo "$(date '+%c') INFO:    Password: ${stack_password:=Skibidibbydibyodadubdub}"
    echo "$(date '+%c') INFO:    SickGear application directory: ${app_base_dir:=/SickGear}"
+   commit_version="$(head -1 "${app_base_dir}/CHANGES.md" | awk '{print $2}')"
    echo "$(date '+%c') INFO:    SickGear configuration directory: ${config_dir:=/config}"
+   app_branch="$(grep ^branch "${config_dir}/sickgear.ini" | awk '{print $3}')"
+   commit_hash="$(grep cur_commit_hash "${config_dir}/sickgear.ini" | awk '{print $3}')"
+   echo "$(date '+%c') INFO:    SickGear version: BRANCH: ${app_branch} @ py$(python3 --version | awk '{print $2}') / COMMIT: ${commit_hash:0:7} @ ${commit_version}"
    echo "$(date '+%c') INFO:    Listening IP Address: ${lan_ip}"
+   echo "$(date '+%c') INFO:    Docker host LAN IP subnet: ${host_lan_ip_subnet}"
    echo "$(date '+%c') INFO:    TV Show location(s): ${tv_dirs:=/storage/tvshows/}"
    echo "$(date '+%c') INFO:    Download directory: ${tv_complete_dir:=/storage/downloads/complete/tv/}"
    if [ "${sickgear_notifications}" ]; then
@@ -28,9 +34,9 @@ Initialise(){
    fi
 }
 
-CheckOpenVPNPIA(){
-   if [ "${openvpnpia_enabled}" ]; then
-      echo "$(date '+%c') INFO:    OpenVPNPIA is enabled. Wait for VPN to connect"
+CheckPIANextGen(){
+   if [ "${pianextgen_enabled}" ]; then
+      echo "$(date '+%c') INFO:    PIANextGen is enabled. Wait for VPN to connect"
       vpn_adapter="$(ip addr | grep tun.$ | awk '{print $7}')"
       while [ -z "${vpn_adapter}" ]; do
          vpn_adapter="$(ip addr | grep tun.$ | awk '{print $7}')"
@@ -38,7 +44,14 @@ CheckOpenVPNPIA(){
       done
       echo "$(date '+%c') INFO:    VPN adapter available: ${vpn_adapter}"
    else
-      echo "$(date '+%c') INFO:    OpenVPNPIA is not enabled"
+      echo "$(date '+%c') INFO:    PIANextGen shared network stack is not enabled, configure container forwarding mode mode"
+      pianextgen_host="$(getent hosts pianextgen | awk '{print $1}')"
+      echo "$(date '+%c') INFO:    PIANextGen container IP address: ${pianextgen_host}"
+      echo "$(date '+%c') INFO:    Create default route via ${pianextgen_host}"
+      ip route del default 
+      ip route add default via "${pianextgen_host}"
+      echo "$(date '+%c') INFO:    Create additional route to Docker host network ${host_lan_ip_subnet} via ${default_gateway}"
+      ip route add "${host_lan_ip_subnet}" via "${default_gateway}"
    fi
 }
 
@@ -67,20 +80,20 @@ CreateGroup(){
 }
 
 CreateUser(){
-   if [ "$(grep -c "^${stack_user}:x:${user_id}:${sickgear_group_id}" "/etc/passwd")" -eq 1 ]; then
-      echo "$(date '+%c') INFO     User, ${stack_user}:${user_id}, already created"
+   if [ "$(grep -c "^${stack_user}:x:${stack_uid}:${sickgear_group_id}" "/etc/passwd")" -eq 1 ]; then
+      echo "$(date '+%c') INFO     User, ${stack_user}:${stack_uid}, already created"
    else
       if [ "$(grep -c "^${stack_user}:" "/etc/passwd")" -eq 1 ]; then
          echo "$(date '+%c') ERROR    User name, ${stack_user}, already in use - exiting"
          sleep 120
          exit 1
-      elif [ "$(grep -c ":x:${user_id}:$" "/etc/passwd")" -eq 1 ]; then
-         echo "$(date '+%c') ERROR    User id, ${user_id}, already in use - exiting"
+      elif [ "$(grep -c ":x:${stack_uid}:$" "/etc/passwd")" -eq 1 ]; then
+         echo "$(date '+%c') ERROR    User id, ${stack_uid}, already in use - exiting"
          sleep 120
          exit 1
       else
-         echo "$(date '+%c') INFO     Creating user ${stack_user}:${user_id}"
-         adduser -s /bin/ash -D -G "${sickgear_group}" -u "${user_id}" "${stack_user}" -h "/home/${stack_user}"
+         echo "$(date '+%c') INFO     Creating user ${stack_user}:${stack_uid}"
+         adduser -s /bin/ash -D -G "${sickgear_group}" -u "${stack_uid}" "${stack_user}" -h "/home/${stack_user}"
       fi
    fi
 }
@@ -142,7 +155,7 @@ Configure(){
          -e "/^\[General\]/,/^\[.*\]/ s%api_keys =.*%api_keys = sabnzbd:::${global_api_key}%" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "${sickgear_enabled}" ]; then
+   if getent hosts sickgear >/dev/null 2>&1; then
       echo "$(date '+%c') INFO:    Set web root for reverse proxying to /sickgear"
       echo "$(date '+%c') INFO:    Enable handling of reverse proxy headers"
       echo "$(date '+%c') INFO:    Disable handling of security headers; leave it to the NGINX reverse proxy"
@@ -155,9 +168,9 @@ Configure(){
 }
 
 Kodi(){
-   if [ "${kodi_enabled}" ]; then
+   if getent hosts kodi >/dev/null 2>&1; then
       if [ "$(grep -c use_kodi "${config_dir}/sickgear.ini")" -eq 0 ]; then
-         echo "$(date '+%c') INFO:    Configuring kodi-headless"
+         echo "$(date '+%c') INFO:    Configuring Kodi"
          sed -i \
             -e "s%metadata_kodi =.*%metadata_kodi = 1|1|0|0|0|0|0|0|0|0%" \
             "${config_dir}/sickgear.ini"
@@ -165,17 +178,17 @@ Kodi(){
             -e "/^\[Kodi\]/a kodi_update_library = 1" \
             -e "/^\[Kodi\]/a kodi_update_full = 1" \
             -e "/^\[Kodi\]/a kodi_notify_ondownload = 1" \
-            -e "/^\[Kodi\]/a kodi_host = kodi:8080" \
-            -e "/^\[Kodi\]/a kodi_password = ${kodi_password}" \
-            -e "/^\[Kodi\]/a kodi_username = kodi" \
+            -e "/^\[Kodi\]/a kodi_host = ${kodi_host:=kodi}:${kodi_port:=8080}" \
+            -e "/^\[Kodi\]/a kodi_password = ${kodi_password:=kodi}" \
+            -e "/^\[Kodi\]/a kodi_username = ${kodi_username:=kodi}" \
             -e "/^\[Kodi\]/a use_kodi = 1" \
             "${config_dir}/sickgear.ini"
       else
-         echo "$(date '+%c') INFO:    Configuring kodi-headless"
+         echo "$(date '+%c') INFO:    Configuring Kodi"
          sed -i \
-            -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_host =.*%kodi_host = kodi:8080%" \
-            -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_password =.*%kodi_password = ${kodi_password}%" \
-            -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_username =.*%kodi_username = kodi%" \
+            -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_host =.*%kodi_host = ${kodi_host:=kodi}:${kodi_port:=8080}%" \
+            -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_password =.*%kodi_password = ${kodi_password:=kodi}%" \
+            -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_username =.*%kodi_username = ${kodi_username:=kodi}%" \
             -e "/^\[Kodi\]/,/^\[.*\]/ s%use_kodi =.*%use_kodi = 1%" \
             -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_always_on =.*%kodi_always_on = 1%" \
             -e "/^\[Kodi\]/,/^\[.*\]/ s%kodi_notify_ondownload =.*%kodi_notify_ondownload = 1%" \
@@ -187,7 +200,7 @@ Kodi(){
 }
 
 SABnzbd(){
-   if [ "${sabnzbd_enabled}" ]; then
+   if getent hosts sabnzbd >/dev/null 2>&1; then
       echo "$(date '+%c') INFO:    Enable SABnzbd"
       echo "$(date '+%c') INFO:    Setting SABnzbd host to http://sabnzbd:9090/"
       echo "$(date '+%c') INFO:    Setting SABnzbd category to: tv"
@@ -243,7 +256,7 @@ SABnzbd(){
 }
 
 Deluge(){
-   if [ "${deluge_enabled}" ]; then
+   if getent hosts deluge >/dev/null 2>&1; then
       echo "$(date '+%c') INFO:    Enable Deluge for Torrents"
       sed -i \
          -e "/^\[General\]/,/^\[.*\]/ s%use_torrents =.*%use_torrents = 1%" \
@@ -276,7 +289,7 @@ Deluge(){
 }
 
 Jellyfin(){
-   if [ "${jellyfin_enabled}" ]; then
+   if getent hosts jellyfin >/dev/null 2>&1; then
       echo "$(date '+%c') INFO:    Enable Jellyfin"
       if [ "$(grep -c "\[Emby\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
          echo "$(date '+%c') INFO:    Add Emby (Jellyfin compatible) configuration section"
@@ -352,7 +365,7 @@ Telegram(){
          -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_chatid =.*%telegram_chatid = ${telegram_chat_id}%" \
          -e "/^\[Telegram\]/,/^\[.*\]/ s%^telegram_access_token =.*%telegram_access_token = ${telegram_token}%" \
          "${config_dir}/sickgear.ini"
-      echo "$(date '+%c') INFO:    Disable send icon"
+      echo "$(date '+%c') INFO:    Enable send icon"
       sed -i \
          -e "/telegram_send_ico/d" \
          "${config_dir}/sickgear.ini"
@@ -441,7 +454,7 @@ LaunchSickGear(){
 
 ##### Script #####
 Initialise
-CheckOpenVPNPIA
+CheckPIANextGen
 CreateGroup
 CreateUser
 if [ ! -f "${config_dir}/sickgear.ini" ]; then FirstRun; fi
