@@ -1,7 +1,7 @@
 FROM alpine:3.13
 MAINTAINER boredazfcuk
 # sickgear_version not used, just increment to force a rebuild
-ARG sickgear_version="Master 0.23.12 @ Commit e792cb6"
+ARG sickgear_version="Master 0.23.21 @ Commit 5a1a122"
 ARG app_repo="SickGear/SickGear"
 ARG build_dependencies="py3-pip gcc python3-dev libxml2-dev libxslt-dev musl-dev"
 ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar unzip p7zip openssl py3-lxml py3-regex py3-cheetah"

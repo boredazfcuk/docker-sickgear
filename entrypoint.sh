@@ -417,13 +417,6 @@ Indexers(){
          -e "/^\[EZTV\]/a eztv = 1" \
          "${config_dir}/sickgear.ini"
    fi
-   if [ "$(grep -c "\[SKYTORRENTS\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
-      echo "$(date '+%c') INFO:    Enable Sky Torrents provider"
-      echo "[SKYTORRENTS]" >> "${config_dir}/sickgear.ini"
-      sed -i \
-         -e "/^\[SKYTORRENTS\]/a skytorrents = 1" \
-         "${config_dir}/sickgear.ini"
-   fi
    if [ "$(grep -c "\[SICK_BEARD_INDEX\]" "${config_dir}/sickgear.ini")" -eq 0 ]; then
       echo "$(date '+%c') INFO:    Enable SickBeard index provider"
       echo "[SICK_BEARD_INDEX]" >> "${config_dir}/sickgear.ini"
