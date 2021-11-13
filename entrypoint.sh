@@ -48,7 +48,7 @@ CheckPIANextGen(){
       pianextgen_host="$(getent hosts pianextgen | awk '{print $1}')"
       echo "$(date '+%c') INFO:    PIANextGen container IP address: ${pianextgen_host}"
       echo "$(date '+%c') INFO:    Create default route via ${pianextgen_host}"
-      ip route del default 
+      ip route del default
       ip route add default via "${pianextgen_host}"
       echo "$(date '+%c') INFO:    Create additional route to Docker host network ${host_lan_ip_subnet} via ${default_gateway}"
       ip route add "${host_lan_ip_subnet}" via "${default_gateway}"
