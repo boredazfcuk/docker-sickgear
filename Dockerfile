@@ -1,7 +1,9 @@
 FROM alpine:3.14.3
 MAINTAINER boredazfcuk
 # sickgear_version not used, just increment to force a rebuild
-ARG sickgear_version="Master 0.25.18 @ Commit 77ddde9"
+ARG sickgear_version="Master 0.25.22 @ Commit 043fe38"
+# last_updated for automated rebuilds
+ARG last_updated="2022-01-26T02:46:40Z"
 ARG app_repo="SickGear/SickGear"
 ARG build_dependencies="py3-pip gcc python3-dev libxml2-dev libxslt-dev musl-dev libffi-dev"
 ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar unzip p7zip openssl py3-lxml py3-regex py3-cheetah py3-cffi py3-cryptography"
@@ -22,14 +24,11 @@ echo "$(date '+%d/%m/%Y - %H:%M:%S') | Install Python requirements" && \
    pip3 install --no-cache-dir --requirement "${app_base_dir}/requirements.txt" && \
    pip3 install --no-cache-dir --requirement "${app_base_dir}/recommended.txt" && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | Clean up" && \
-   apk del --purge build-deps
-
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY healthcheck.sh /usr/local/bin/healthcheck.sh
-
-RUN echo "$(date '+%d/%m/%Y - %H:%M:%S') | Set permissions on scripts" && \
-   chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/healthcheck.sh && \
+   apk del --purge build-deps && \
 echo "$(date '+%d/%m/%Y - %H:%M:%S') | ***** BUILD COMPLETE *****"
+
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chmod=0755 healthcheck.sh /usr/local/bin/healthcheck.sh
 
 HEALTHCHECK --start-period=10s --interval=1m --timeout=10s \
   CMD /usr/local/bin/healthcheck.sh
