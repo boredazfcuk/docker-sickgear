@@ -3,7 +3,7 @@ MAINTAINER boredazfcuk
 # sickgear_version not used, just increment to force a rebuild
 ARG sickgear_version="Master 0.25.22 @ Commit 043fe38"
 # last_updated for automated rebuilds
-ARG last_updated="2022-01-26T02:46:40Z"
+ARG last_updated="2022-02-05T01:20:48Z"
 ARG app_repo="SickGear/SickGear"
 ARG build_dependencies="py3-pip gcc python3-dev libxml2-dev libxslt-dev musl-dev libffi-dev"
 ARG app_dependencies="git ca-certificates python3 libxml2 libxslt tzdata unrar unzip p7zip openssl py3-lxml py3-regex py3-cheetah py3-cffi py3-cryptography"
